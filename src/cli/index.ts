@@ -3,6 +3,7 @@ import { resolve, dirname } from "node:path";
 import { pathToFileURL } from "node:url";
 import { readFileSync } from "node:fs";
 import { runWorkflow, renderFrame, resolveSchema } from "../engine";
+import { serializeGraphSnapshot } from "./serializeGraphSnapshot";
 import { approveNode, denyNode } from "../engine/approvals";
 import { loadInput, loadOutputs } from "../db/snapshot";
 import { ensureSmithersTables } from "../db/ensure";
@@ -457,21 +458,7 @@ Run options:
     const resolvedWorkflowPath = resolve(process.cwd(), workflowPath);
     const baseRootDir = dirname(resolvedWorkflowPath);
     const snap = await renderFrame(workflow, ctx, { baseRootDir });
-    const seen = new WeakSet<object>();
-    console.log(
-      JSON.stringify(
-        snap,
-        (_key, value) => {
-          if (typeof value === "function") return undefined;
-          if (typeof value === "object" && value !== null) {
-            if (seen.has(value)) return undefined;
-            seen.add(value);
-          }
-          return value;
-        },
-        2,
-      ),
-    );
+    console.log(JSON.stringify(serializeGraphSnapshot(snap), null, 2));
     process.exit(0);
   }
 
